@@ -1,0 +1,69 @@
+from weasyprint import HTML
+
+# Create the content for Plan.md
+plan_content = """# 📑 Project Plan: Smart Scanner to Email
+**Platform:** Windows 11  
+**Framework:** .NET 8.0 (WPF)  
+**Language:** C#  
+**IDE:** Visual Studio 2022
+
+---
+
+## 1. 🎯 Project Overview
+A desktop application designed for Windows 11 to streamline the "Scan-to-Email" workflow. The app interfaces with scanner drivers (TWAIN/WIA), captures documents, converts them into a consolidated PDF file, and dispatches them via email based on user-defined parameters.
+
+---
+
+## 2. 🏗️ System Architecture
+The application follows a modular structure to ensure maintainability:
+1.  **UI Module (XAML):** A modern Windows 11 interface for user input and process monitoring.
+2.  **Scanning Module:** Handles communication with hardware drivers to acquire raw image data.
+3.  **PDF Engine:** Processes image buffers into a professional, compressed PDF document.
+4.  **Mail Dispatcher:** Manages SMTP authentication and secure file transmission.
+
+---
+
+## 3. 🛠️ Tech Stack & Libraries
+| Function | Library / Technology | Key Benefit |
+| :--- | :--- | :--- |
+| **GUI** | WPF (.NET 8) | Native Windows 11 look, Fluent Design support. |
+| **Scanning** | `NTWAIN` or `WIA` | Wide compatibility with flatbed and ADF scanners. |
+| **PDF Creation** | `QuestPDF` | High-performance, code-based PDF generation. |
+| **Email Service** | `MailKit` | Robust, supports modern security protocols (TLS). |
+| **Storage** | `System.IO` | Manages local temp files and naming conventions. |
+
+---
+
+## 4. 📅 Development Roadmap
+
+### Phase 1: UI & UX Setup
+- [ ] Create a **WPF Application** project in Visual Studio.
+- [ ] Design the main dashboard:
+    - [ ] **Scanner Selection:** ComboBox to list available drivers.
+    - [ ] **File Details:** Input for "File Name".
+    - [ ] **Email Details:** Inputs for "Recipient", "Subject", and "Email Body".
+    - [ ] **Actions:** "Scan & Send" button with a progress indicator.
+
+### Phase 2: Scanning Integration
+- [ ] Implement `NTWAIN` logic to detect and open scanner sources.
+- [ ] Configure scan settings (DPI, Color Mode, Single/Multi-page).
+- [ ] Capture image streams and store them in memory buffers.
+
+### Phase 3: PDF Processing
+- [ ] Implement the PDF conversion logic.
+- [ ] Handle image scaling to ensure the PDF fits standard A4/Letter sizes.
+- [ ] Implement file naming logic based on user input.
+
+### Phase 4: Email Logic
+- [ ] Setup SMTP configuration (Host, Port, Credentials).
+- [ ] Integrate **MailKit** to handle the `MimeMessage` creation.
+- [ ] Attach the generated PDF and execute the `Send` command asynchronously.
+
+### Phase 5: Testing & Finalization
+- [ ] Add exception handling (e.g., Scanner busy, SMTP Auth failed).
+- [ ] Implement "Success" and "Error" notification dialogs.
+- [ ] Optimize for Windows 11 performance and scaling.
+
+---
+
+## 5. 📂 Project Structure (Recommended)

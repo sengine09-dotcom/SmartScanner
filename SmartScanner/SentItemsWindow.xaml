@@ -1,0 +1,151 @@
+<Window x:Class="SmartScanner.SentItemsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="อีเมลที่ส่งแล้ว"
+        Icon="Icon/logo_smart_scan.png"
+        Height="580" Width="900"
+        MinHeight="420" MinWidth="700"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Th.Window.Bg}"
+        Foreground="{DynamicResource Th.Body.Fg}">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#059669" CornerRadius="10" Padding="16,12" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="📬  อีเมลที่ส่งแล้ว" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock x:Name="TbCount" FontSize="13" Foreground="#D1FAE5" Margin="0,3,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnRefresh" Content="🔄  รีเฟรช" Click="BtnRefresh_Click"
+                            Height="34" Padding="14,0" FontSize="13" FontWeight="SemiBold" Cursor="Hand"
+                            Background="#047857" Foreground="White" BorderThickness="0" Margin="0,0,8,0">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True"><Setter Property="Opacity" Value="0.85"/></Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button x:Name="BtnClearAll" Content="🗑  ล้างทั้งหมด" Click="BtnClearAll_Click"
+                            Height="34" Padding="14,0" FontSize="13" FontWeight="SemiBold" Cursor="Hand"
+                            Background="#EF4444" Foreground="White" BorderThickness="0">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True"><Setter Property="Opacity" Value="0.85"/></Trigger>
+                                    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- DataGrid -->
+        <Border Grid.Row="1" Background="{DynamicResource Th.Card.Bg}" CornerRadius="10" Padding="2">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.09" Color="Black"/>
+            </Border.Effect>
+            <DataGrid x:Name="DgSentItems"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="{DynamicResource Th.DataGrid.GridLine}"
+                      BorderThickness="0"
+                      Background="{DynamicResource Th.Card.Bg}"
+                      RowBackground="{DynamicResource Th.Card.Bg}"
+                      AlternatingRowBackground="{DynamicResource Th.DataGrid.AltRow.Bg}"
+                      Foreground="{DynamicResource Th.Body.Fg}"
+                      FontSize="13"
+                      ColumnHeaderHeight="38"
+                      RowHeight="46">
+
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="{DynamicResource Th.DataGrid.Header.Bg}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource Th.Body.Fg}"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="FontSize" Value="13"/>
+                        <Setter Property="Padding" Value="12,0"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="Padding" Value="12,0"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource Th.Thumb.Item.Selected.Bg}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Th.DataGrid.Cell.Selected.Fg}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="วันเวลาที่ส่ง" Binding="{Binding SentAtDisplay}" Width="155" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="จาก (From)" Binding="{Binding FromDisplay}" Width="200" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="ถึง (To)" Binding="{Binding ToEmail}" Width="200" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="หัวเรื่อง (Subject)" Binding="{Binding Subject}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="ไฟล์" Binding="{Binding FileName}" Width="160" IsReadOnly="True"/>
+                    <DataGridTemplateColumn Header="" Width="44" CanUserResize="False" CanUserSort="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="📄" ToolTip="เปิดไฟล์ PDF"
+                                        Width="32" Height="28" FontSize="14" Cursor="Hand"
+                                        Background="Transparent" BorderThickness="0"
+                                        Click="BtnOpenRow_Click"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="" Width="44" CanUserResize="False" CanUserSort="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="🗑" ToolTip="ลบรายการนี้"
+                                        Width="32" Height="28" FontSize="14" Cursor="Hand"
+                                        Background="Transparent" BorderThickness="0"
+                                        Tag="{Binding Id}"
+                                        Click="BtnDeleteRow_Click"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Margin="0,10,0,0" Background="{DynamicResource Th.Card.Bg}" CornerRadius="8" Padding="14,10">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.07" Color="Black"/>
+            </Border.Effect>
+            <TextBlock x:Name="TbFooter" FontSize="12" Foreground="{DynamicResource Th.Muted.Fg}"
+                       Text="เลือกแถวแล้วกดปุ่ม 🗑 เพื่อลบรายการนั้น  |  กด 'ล้างทั้งหมด' เพื่อลบทุกรายการ"/>
+        </Border>
+    </Grid>
+</Window>

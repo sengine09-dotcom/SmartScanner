@@ -1,0 +1,49 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="Th.Window.Bg"               Color="#EEF2F7"/>
+    <SolidColorBrush x:Key="Th.Card.Bg"                 Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Th.Input.Bg"                Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Th.Input.Fg"                Color="#111827"/>
+    <SolidColorBrush x:Key="Th.Input.Border"            Color="#D1D5DB"/>
+    <SolidColorBrush x:Key="Th.Label.Fg"                Color="#1E293B"/>
+    <SolidColorBrush x:Key="Th.Body.Fg"                 Color="#374151"/>
+    <SolidColorBrush x:Key="Th.Muted.Fg"                Color="#6B7280"/>
+    <SolidColorBrush x:Key="Th.Subtle.Fg"               Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="Th.Ghost.Bg"                Color="#F3F4F6"/>
+    <SolidColorBrush x:Key="Th.Ghost.Bg.Hover"          Color="#E5E7EB"/>
+    <SolidColorBrush x:Key="Th.Ghost.Bg.Disabled"       Color="#F9FAFB"/>
+    <SolidColorBrush x:Key="Th.Ghost.Fg"                Color="#374151"/>
+    <SolidColorBrush x:Key="Th.Ghost.Border"            Color="#D1D5DB"/>
+    <SolidColorBrush x:Key="Th.Progress.Bg"             Color="#E5E7EB"/>
+    <SolidColorBrush x:Key="Th.Status.Bg"               Color="#F0F9FF"/>
+    <SolidColorBrush x:Key="Th.Status.Border"           Color="#BAE6FD"/>
+    <SolidColorBrush x:Key="Th.Status.Fg"               Color="#0C4A6E"/>
+    <SolidColorBrush x:Key="Th.Splitter.Bg"             Color="#CBD5E1"/>
+    <SolidColorBrush x:Key="Th.RightPanel.Bg"           Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Th.Preview.Bg"              Color="#F3F4F6"/>
+    <SolidColorBrush x:Key="Th.Preview.Card.Bg"         Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Th.Thumb.Strip.Bg"          Color="#E5E7EB"/>
+    <SolidColorBrush x:Key="Th.Thumb.Strip.Border"      Color="#CBD5E1"/>
+    <SolidColorBrush x:Key="Th.Thumb.Item.Bg"           Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Th.Thumb.Item.Hover.Bg"     Color="#DBEAFE"/>
+    <SolidColorBrush x:Key="Th.Thumb.Item.Selected.Bg"  Color="#EFF6FF"/>
+    <SolidColorBrush x:Key="Th.Thumb.Handle.Fg"         Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="Th.Thumb.Label.Fg"          Color="#374151"/>
+    <SolidColorBrush x:Key="Th.Placeholder.Icon"        Color="#D1D5DB"/>
+    <SolidColorBrush x:Key="Th.Placeholder.Title"       Color="#6B7280"/>
+    <SolidColorBrush x:Key="Th.Placeholder.Subtitle"    Color="#9CA3AF"/>
+
+    <SolidColorBrush x:Key="Th.ListBox.Bg"               Color="#FAFAFA"/>
+    <SolidColorBrush x:Key="Th.ListBox.Border"            Color="#E5E7EB"/>
+    <SolidColorBrush x:Key="Th.Form.Panel.Bg"             Color="#F9FAFB"/>
+    <SolidColorBrush x:Key="Th.Info.Bg"                   Color="#FFFBEB"/>
+    <SolidColorBrush x:Key="Th.Info.Border"               Color="#FDE68A"/>
+    <SolidColorBrush x:Key="Th.Info.Title.Fg"             Color="#92400E"/>
+    <SolidColorBrush x:Key="Th.Info.Body.Fg"              Color="#78350F"/>
+    <SolidColorBrush x:Key="Th.DataGrid.Header.Bg"        Color="#F1F5F9"/>
+    <SolidColorBrush x:Key="Th.DataGrid.AltRow.Bg"        Color="#F9FAFB"/>
+    <SolidColorBrush x:Key="Th.DataGrid.GridLine"         Color="#F3F4F6"/>
+    <SolidColorBrush x:Key="Th.DataGrid.Cell.Selected.Fg" Color="#1E40AF"/>
+
+</ResourceDictionary>

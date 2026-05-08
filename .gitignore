@@ -1,0 +1,12 @@
+# Build outputs
+bin/
+obj/
+publish/
+installer_output/
+
+# Visual Studio
+.vs/
+*.user
+
+# OS
+Thumbs.db
