@@ -80,6 +80,8 @@ public class MainViewModel : INotifyPropertyChanged
     private IntPtr _windowHandle;
     private List<byte[]> _scannedBytes = new();
     private BitmapImage? _selectedPage;
+    private double _zoomLevel = 100;
+    private bool _fitToWindow = true;
 
     // SMTP shared settings (edited in SettingsWindow only)
     public string SmtpHost      { get; set; } = "mail.asianonlinegroup.co.th";
@@ -109,6 +111,17 @@ public class MainViewModel : INotifyPropertyChanged
     public string Body { get => _body; set => Set(ref _body, value); }
     public int SelectedDpi { get => _selectedDpi; set => Set(ref _selectedDpi, value); }
     public string SelectedColorMode { get => _selectedColorMode; set => Set(ref _selectedColorMode, value); }
+    public double ZoomLevel
+    {
+        get => _zoomLevel;
+        set
+        {
+            Set(ref _zoomLevel, value);
+            OnPropertyChanged(nameof(ZoomPercentage));
+        }
+    }
+    public bool FitToWindow { get => _fitToWindow; set => Set(ref _fitToWindow, value); }
+    public string ZoomPercentage => $"{ZoomLevel:F0}%";
     public SenderProfile? SelectedSender
     {
         get => _selectedSender;
@@ -151,6 +164,10 @@ public class MainViewModel : INotifyPropertyChanged
     public RelayCommand ClearCommand { get; }
     public RelayCommand RefreshScannersCommand { get; }
     public RelayCommand SelectPageCommand { get; }
+    public RelayCommand ZoomInCommand { get; }
+    public RelayCommand ZoomOutCommand { get; }
+    public RelayCommand ZoomResetCommand { get; }
+    public RelayCommand FitToWindowCommand { get; }
 
     public MainViewModel(IScannerService scannerService, IPdfService pdfService, IEmailService emailService, ISettingsService settingsService, ISentItemsService sentItemsService)
     {
@@ -168,6 +185,10 @@ public class MainViewModel : INotifyPropertyChanged
         ClearCommand = new RelayCommand(_ => ClearPreview(), _ => !IsBusy && HasPreview);
         RefreshScannersCommand = new RelayCommand(_ => RefreshScanners(), _ => !IsBusy);
         SelectPageCommand = new RelayCommand(p => SelectPage(p as PagePreviewItem));
+        ZoomInCommand = new RelayCommand(_ => ZoomIn(), _ => HasPreview);
+        ZoomOutCommand = new RelayCommand(_ => ZoomOut(), _ => HasPreview);
+        ZoomResetCommand = new RelayCommand(_ => ZoomReset(), _ => HasPreview);
+        FitToWindowCommand = new RelayCommand(_ => SetFitToWindow(), _ => HasPreview);
 
         LoadSettings();
         RefreshScanners();
@@ -528,6 +549,43 @@ public class MainViewModel : INotifyPropertyChanged
         Status = "ล้างข้อมูลเรียบร้อย";
     }
 
+    public event Action? RequestCommitTextEdit;
+
+    private void ZoomIn()
+    {
+        RequestCommitTextEdit?.Invoke();
+        if (FitToWindow)
+            FitToWindow = false;
+        ZoomLevel = Math.Min(400, ZoomLevel + 25);
+    }
+
+    private void ZoomOut()
+    {
+        RequestCommitTextEdit?.Invoke();
+        if (FitToWindow)
+            FitToWindow = false;
+        ZoomLevel = Math.Max(25, ZoomLevel - 25);
+    }
+
+    private void ZoomReset()
+    {
+        RequestCommitTextEdit?.Invoke();
+        if (FitToWindow)
+            FitToWindow = false;
+        ZoomLevel = 100;
+    }
+
+    private void SetFitToWindow()
+    {
+        RequestCommitTextEdit?.Invoke();
+        FitToWindow = !FitToWindow;
+        if (!FitToWindow)
+            ZoomLevel = 100;
+        ZoomInCommand.RaiseCanExecuteChanged();
+        ZoomOutCommand.RaiseCanExecuteChanged();
+        FitToWindowCommand.RaiseCanExecuteChanged();
+    }
+
     private void NotifyPreview()
     {
         OnPropertyChanged(nameof(HasPreview));
@@ -536,6 +594,10 @@ public class MainViewModel : INotifyPropertyChanged
         SavePdfCommand.RaiseCanExecuteChanged();
         SendCommand.RaiseCanExecuteChanged();
         ClearCommand.RaiseCanExecuteChanged();
+        ZoomInCommand.RaiseCanExecuteChanged();
+        ZoomOutCommand.RaiseCanExecuteChanged();
+        ZoomResetCommand.RaiseCanExecuteChanged();
+        FitToWindowCommand.RaiseCanExecuteChanged();
     }
 
     private void RaiseAll()

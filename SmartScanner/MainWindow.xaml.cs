@@ -1,9 +1,11 @@
 using SmartScanner.Services;
 using SmartScanner.ViewModels;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -11,6 +13,32 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
 namespace SmartScanner;
+
+public class ZoomLevelConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is double zoom)
+            return zoom / 100.0;
+        return 1.0;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
+
+public class InverseBooleanToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool b)
+            return b ? Visibility.Collapsed : Visibility.Visible;
+        return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}
 
 public partial class MainWindow : Window
 {
@@ -36,6 +64,8 @@ public partial class MainWindow : Window
     private readonly Dictionary<PagePreviewItem, List<UIElement>> _pageOverlays = new();
     private PagePreviewItem? _currentPageItem;
 
+    private Canvas ActiveEditCanvas => _vm.FitToWindow ? MainEditCanvas : ZoomEditCanvas;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -50,23 +80,31 @@ public partial class MainWindow : Window
         var handle = new WindowInteropHelper(this).Handle;
         _vm.SetWindowHandle(handle);
         _vm.PropertyChanged += OnVmPropertyChanged;
+        _vm.RequestCommitTextEdit += CommitEditTextBox;
     }
 
     private void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(MainViewModel.SelectedPage)) return;
-        Dispatcher.Invoke(() =>
+        if (e.PropertyName == nameof(MainViewModel.SelectedPage))
         {
-            if (_vm.SelectedPage != null)
-                LoadPageToCanvas(_vm.SelectedPage);
-            else
+            Dispatcher.Invoke(() =>
             {
-                CommitEditTextBox();
-                MainEditCanvas.Children.Clear();
-                _pageOverlays.Clear();
-                _currentPageItem = null;
-            }
-        });
+                if (_vm.SelectedPage != null)
+                    LoadPageToCanvas(_vm.SelectedPage);
+                else
+                {
+                    CommitEditTextBox();
+                    MainEditCanvas.Children.Clear();
+                    ZoomEditCanvas.Children.Clear();
+                    _pageOverlays.Clear();
+                    _currentPageItem = null;
+                }
+            });
+        }
+        else if (e.PropertyName == nameof(MainViewModel.FitToWindow))
+        {
+            Dispatcher.Invoke(SyncCanvasContent);
+        }
     }
 
     // ── Canvas page loading ───────────────────────────────────────────────────
@@ -83,6 +121,7 @@ public partial class MainWindow : Window
         BtnMainTextMode.IsChecked  = false;
         BtnMainEraseMode.IsChecked = false;
         MainEditCanvas.Children.Clear();
+        ZoomEditCanvas.Children.Clear();
 
         // Track the new page
         _currentPageItem = _vm.PreviewPages.FirstOrDefault(p => p.IsSelected);
@@ -96,12 +135,20 @@ public partial class MainWindow : Window
 
         MainEditCanvas.Width  = dispW;
         MainEditCanvas.Height = dispH;
+        ZoomEditCanvas.Width  = imgW;
+        ZoomEditCanvas.Height = imgH;
 
-        var bg = new Image { Source = bmp, Width = dispW, Height = dispH, Stretch = Stretch.Fill };
-        Canvas.SetLeft(bg, 0);
-        Canvas.SetTop(bg, 0);
-        Panel.SetZIndex(bg, 0);
-        MainEditCanvas.Children.Add(bg);
+        var bgFit = new Image { Source = bmp, Width = dispW, Height = dispH, Stretch = Stretch.Fill };
+        Canvas.SetLeft(bgFit, 0);
+        Canvas.SetTop(bgFit, 0);
+        Panel.SetZIndex(bgFit, 0);
+        MainEditCanvas.Children.Add(bgFit);
+
+        var bgZoom = new Image { Source = bmp, Width = imgW, Height = imgH, Stretch = Stretch.Fill };
+        Canvas.SetLeft(bgZoom, 0);
+        Canvas.SetTop(bgZoom, 0);
+        Panel.SetZIndex(bgZoom, 0);
+        ZoomEditCanvas.Children.Add(bgZoom);
 
         // Restore overlays for the new page (if any)
         if (_currentPageItem != null)
@@ -111,25 +158,41 @@ public partial class MainWindow : Window
         UpdateEditCursor();
     }
 
+    private void SyncCanvasContent()
+    {
+        CommitEditTextBox();
+
+        // Clear both canvases except background
+        MainEditCanvas.Children.RemoveRange(1, MainEditCanvas.Children.Count - 1);
+        ZoomEditCanvas.Children.RemoveRange(1, ZoomEditCanvas.Children.Count - 1);
+
+        // Reload the current page to both canvases
+        if (_vm.SelectedPage != null)
+        {
+            LoadPageToCanvas(_vm.SelectedPage);
+        }
+    }
+
     private void SavePageOverlays(PagePreviewItem page)
     {
-        // Children[0] is the background image — save everything after it
-        if (MainEditCanvas.Children.Count <= 1)
+        var activeCanvas = _vm.FitToWindow ? MainEditCanvas : ZoomEditCanvas;
+        if (activeCanvas.Children.Count <= 1)
         {
             _pageOverlays.Remove(page);
             return;
         }
         var overlays = new List<UIElement>();
-        for (var i = 1; i < MainEditCanvas.Children.Count; i++)
-            overlays.Add((UIElement)MainEditCanvas.Children[i]);
+        for (var i = 1; i < activeCanvas.Children.Count; i++)
+            overlays.Add((UIElement)activeCanvas.Children[i]);
         _pageOverlays[page] = overlays;
     }
 
     private void RestorePageOverlays(PagePreviewItem page)
     {
         if (!_pageOverlays.TryGetValue(page, out var overlays)) return;
+        var activeCanvas = _vm.FitToWindow ? MainEditCanvas : ZoomEditCanvas;
         foreach (var el in overlays)
-            MainEditCanvas.Children.Add(el);
+            activeCanvas.Children.Add(el);
     }
 
     // ── Toolbar button handlers ───────────────────────────────────────────────
@@ -215,6 +278,7 @@ public partial class MainWindow : Window
 
     private void EditCanvas_PreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
+        var canvas = ActiveEditCanvas;
         if (_editMode == EditMode.Text)
         {
             if (_activeEditTextBox != null &&
@@ -226,19 +290,19 @@ public partial class MainWindow : Window
             if (IsOverCommittedEditOverlay(e.OriginalSource as DependencyObject))
                 return;
 
-            PlaceEditTextBox(e.GetPosition(MainEditCanvas));
+            PlaceEditTextBox(e.GetPosition(canvas));
             e.Handled = true;
         }
         else if (_editMode == EditMode.Erase)
         {
             if (IsOverCommittedEditOverlay(e.OriginalSource as DependencyObject))
-                return; // let committed text labels handle their own drag
+                return;
 
             if (e.OriginalSource is Rectangle r && r.IsHitTestVisible)
-                return; // let committed erase rectangles handle their own right-click
+                return;
 
             CommitEditTextBox();
-            _editRectStart   = e.GetPosition(MainEditCanvas);
+            _editRectStart   = e.GetPosition(canvas);
             _editDrawingRect = true;
             _editCurrentRect = new Rectangle
             {
@@ -253,8 +317,8 @@ public partial class MainWindow : Window
             Canvas.SetLeft(_editCurrentRect, _editRectStart.X);
             Canvas.SetTop(_editCurrentRect,  _editRectStart.Y);
             Panel.SetZIndex(_editCurrentRect, 5);
-            MainEditCanvas.Children.Add(_editCurrentRect);
-            MainEditCanvas.CaptureMouse();
+            canvas.Children.Add(_editCurrentRect);
+            canvas.CaptureMouse();
             e.Handled = true;
         }
     }
@@ -262,7 +326,8 @@ public partial class MainWindow : Window
     private void EditCanvas_MouseMove(object sender, MouseEventArgs e)
     {
         if (!_editDrawingRect || _editCurrentRect == null) return;
-        var pos = e.GetPosition(MainEditCanvas);
+        var canvas = ActiveEditCanvas;
+        var pos = e.GetPosition(canvas);
         var x   = Math.Min(pos.X, _editRectStart.X);
         var y   = Math.Min(pos.Y, _editRectStart.Y);
         var w   = Math.Abs(pos.X - _editRectStart.X);
@@ -276,12 +341,13 @@ public partial class MainWindow : Window
     private void EditCanvas_MouseUp(object sender, MouseButtonEventArgs e)
     {
         if (!_editDrawingRect) return;
+        var canvas = ActiveEditCanvas;
         _editDrawingRect = false;
-        MainEditCanvas.ReleaseMouseCapture();
+        canvas.ReleaseMouseCapture();
         if (_editCurrentRect != null)
         {
             if (_editCurrentRect.Width < 4 || _editCurrentRect.Height < 4)
-                MainEditCanvas.Children.Remove(_editCurrentRect);
+                canvas.Children.Remove(_editCurrentRect);
             else
             {
                 _editCurrentRect.Stroke = null;
@@ -312,6 +378,7 @@ public partial class MainWindow : Window
 
     private void PlaceEditTextBox(Point pos)
     {
+        var canvas = ActiveEditCanvas;
         var tb = new TextBox
         {
             FontSize        = _editFontSize,
@@ -320,7 +387,7 @@ public partial class MainWindow : Window
             BorderBrush     = new SolidColorBrush(Color.FromArgb(140, 30, 80, 220)),
             BorderThickness = new Thickness(1),
             MinWidth        = 60,
-            MaxWidth        = MainEditCanvas.Width - pos.X - 4,
+            MaxWidth        = canvas.Width - pos.X - 4,
             Padding         = new Thickness(3, 1, 3, 1),
             AcceptsReturn   = false,
             CaretBrush      = _editTextBrush,
@@ -328,7 +395,7 @@ public partial class MainWindow : Window
         Canvas.SetLeft(tb, pos.X);
         Canvas.SetTop(tb,  pos.Y);
         Panel.SetZIndex(tb, 10);
-        MainEditCanvas.Children.Add(tb);
+        canvas.Children.Add(tb);
         tb.KeyDown   += EditTextBox_KeyDown;
         tb.LostFocus += EditTextBox_LostFocus;
         _activeEditTextBox = tb;
@@ -338,9 +405,10 @@ public partial class MainWindow : Window
 
     private void ReEditLabel(TextBlock label)
     {
+        var canvas = ActiveEditCanvas;
         var left = Canvas.GetLeft(label);
         var top  = Canvas.GetTop(label);
-        MainEditCanvas.Children.Remove(label);
+        canvas.Children.Remove(label);
 
         var tb = new TextBox
         {
@@ -351,7 +419,7 @@ public partial class MainWindow : Window
             BorderBrush     = new SolidColorBrush(Color.FromArgb(140, 30, 80, 220)),
             BorderThickness = new Thickness(1),
             MinWidth        = 60,
-            MaxWidth        = MainEditCanvas.Width - left - 4,
+            MaxWidth        = canvas.Width - left - 4,
             Padding         = new Thickness(3, 1, 3, 1),
             AcceptsReturn   = false,
             CaretBrush      = label.Foreground,
@@ -359,7 +427,7 @@ public partial class MainWindow : Window
         Canvas.SetLeft(tb, left);
         Canvas.SetTop(tb,  top);
         Panel.SetZIndex(tb, 10);
-        MainEditCanvas.Children.Add(tb);
+        canvas.Children.Add(tb);
         tb.KeyDown   += EditTextBox_KeyDown;
         tb.LostFocus += EditTextBox_LostFocus;
         _activeEditTextBox = tb;
@@ -395,11 +463,12 @@ public partial class MainWindow : Window
     private void CommitEditTextBox()
     {
         if (_activeEditTextBox == null) return;
+        var canvas = ActiveEditCanvas;
         var tb   = _activeEditTextBox;
         var left = Canvas.GetLeft(tb);
         var top  = Canvas.GetTop(tb);
         _activeEditTextBox = null;
-        MainEditCanvas.Children.Remove(tb);
+        canvas.Children.Remove(tb);
         if (string.IsNullOrWhiteSpace(tb.Text)) return;
 
         var label = new TextBlock
@@ -415,7 +484,6 @@ public partial class MainWindow : Window
         Canvas.SetTop(label,  top);
         Panel.SetZIndex(label, 8);
 
-        // Per-label drag state (captured in closures)
         Point dragOffset   = default;
         bool  draggingLabel = false;
 
@@ -425,7 +493,7 @@ public partial class MainWindow : Window
             label.Background = Brushes.Transparent;
 
         var removeItem = new MenuItem { Header = "🗑 ลบข้อความ" };
-        removeItem.Click += (s, e) => MainEditCanvas.Children.Remove(label);
+        removeItem.Click += (s, e) => canvas.Children.Remove(label);
         label.ContextMenu = new ContextMenu { Items = { removeItem } };
 
         label.MouseLeftButtonDown += (s, e) =>
@@ -446,7 +514,7 @@ public partial class MainWindow : Window
         label.MouseMove += (s, e) =>
         {
             if (!draggingLabel) return;
-            var pos = e.GetPosition(MainEditCanvas);
+            var pos = e.GetPosition(canvas);
             Canvas.SetLeft(label, pos.X - dragOffset.X);
             Canvas.SetTop(label,  pos.Y - dragOffset.Y);
         };
@@ -458,7 +526,7 @@ public partial class MainWindow : Window
             e.Handled = true;
         };
 
-        MainEditCanvas.Children.Add(label);
+        canvas.Children.Add(label);
     }
 
     // ── Save edits ────────────────────────────────────────────────────────────
@@ -466,30 +534,33 @@ public partial class MainWindow : Window
     private void BtnSaveEdits_Click(object sender, RoutedEventArgs e)
     {
         CommitEditTextBox();
-        MainEditCanvas.UpdateLayout();
 
         var item = _vm.PreviewPages.FirstOrDefault(p => p.IsSelected);
         if (item == null) return;
 
-        // Render at original image resolution to preserve quality
+        var canvas = ActiveEditCanvas;
+        canvas.UpdateLayout();
+
         var origW  = item.Image.PixelWidth;
         var origH  = item.Image.PixelHeight;
-        var scaleX = origW / MainEditCanvas.ActualWidth;
-        var scaleY = origH / MainEditCanvas.ActualHeight;
+        var scaleX = origW / canvas.ActualWidth;
+        var scaleY = origH / canvas.ActualHeight;
 
         var rtb = new RenderTargetBitmap(origW, origH, 96 * scaleX, 96 * scaleY, PixelFormats.Pbgra32);
-        rtb.Render(MainEditCanvas);
+        rtb.Render(canvas);
 
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(rtb));
         using var ms = new MemoryStream();
         encoder.Save(ms);
 
-        // Remove overlays from canvas and storage — they are now baked into the image
-        while (MainEditCanvas.Children.Count > 1)
-            MainEditCanvas.Children.RemoveAt(1);
+        while (canvas.Children.Count > 1)
+            canvas.Children.RemoveAt(1);
         if (_currentPageItem != null)
             _pageOverlays.Remove(_currentPageItem);
+
+        MainEditCanvas.Children.RemoveRange(1, MainEditCanvas.Children.Count - 1);
+        ZoomEditCanvas.Children.RemoveRange(1, ZoomEditCanvas.Children.Count - 1);
 
         _vm.ReplacePage(item, ms.ToArray());
         _vm.Status = "บันทึกการแก้ไขเรียบร้อย";
@@ -510,10 +581,11 @@ public partial class MainWindow : Window
 
     private bool IsOverCommittedEditOverlay(DependencyObject? node)
     {
+        var canvas = ActiveEditCanvas;
         var el = node;
         while (el != null)
         {
-            if (el == MainEditCanvas) return false;
+            if (el == canvas) return false;
             if (el is TextBlock) return true;
             el = VisualTreeHelper.GetParent(el);
         }
@@ -643,5 +715,22 @@ public partial class MainWindow : Window
             el = VisualTreeHelper.GetParent(el);
         }
         return false;
+    }
+
+    // ── Zoom event handlers ───────────────────────────────────────────────────
+
+    private void BtnZoomIn_Click(object sender, RoutedEventArgs e) => _vm.ZoomInCommand.Execute(null);
+    private void BtnZoomOut_Click(object sender, RoutedEventArgs e) => _vm.ZoomOutCommand.Execute(null);
+    private void BtnZoomReset_Click(object sender, RoutedEventArgs e) => _vm.ZoomResetCommand.Execute(null);
+    private void BtnFitToWindow_Click(object sender, RoutedEventArgs e) => _vm.FitToWindowCommand.Execute(null);
+
+    private void ZoomScroller_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (_vm.FitToWindow) return;
+        e.Handled = true;
+        if (e.Delta > 0)
+            _vm.ZoomInCommand.Execute(null);
+        else
+            _vm.ZoomOutCommand.Execute(null);
     }
 }
