@@ -473,6 +473,18 @@ public class MainViewModel : INotifyPropertyChanged
             : "ล้างเอกสารเรียบร้อย";
     }
 
+    public byte[] GetPageBytes(int index) => _scannedBytes[index];
+
+    public void ReplacePage(PagePreviewItem item, byte[] newBytes)
+    {
+        var index = PreviewPages.IndexOf(item);
+        if (index < 0) return;
+        _scannedBytes[index] = newBytes;
+        item.Image = BytesToBitmapImage(newBytes);
+        if (item.IsSelected)
+            SelectedPage = item.Image;
+    }
+
     public void RotatePage(PagePreviewItem item, double degrees = 90)
     {
         var index = PreviewPages.IndexOf(item);

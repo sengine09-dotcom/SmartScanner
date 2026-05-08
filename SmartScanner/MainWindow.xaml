@@ -469,6 +469,7 @@
         <Grid Grid.Column="2" Background="{DynamicResource Th.RightPanel.Bg}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -491,7 +492,7 @@
             </Border>
 
             <!-- Content: main preview + thumbnail strip -->
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -509,17 +510,22 @@
                                HorizontalAlignment="Center" Margin="0,6,0,0"/>
                 </StackPanel>
 
-                <!-- Main view: full-size selected page -->
-                <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                              Background="{DynamicResource Th.Preview.Bg}"
-                              Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}">
-                    <Border Margin="14" Background="{DynamicResource Th.Preview.Card.Bg}" CornerRadius="6">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.14" Color="Black"/>
-                        </Border.Effect>
-                        <Image Source="{Binding SelectedPage}" Stretch="Uniform"/>
-                    </Border>
-                </ScrollViewer>
+                <!-- Main view: Viewbox fills full area, canvas scales uniformly -->
+                <Grid Grid.Column="0" Background="{DynamicResource Th.Preview.Bg}"
+                      Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}">
+                    <Viewbox Stretch="Uniform" Margin="14">
+                        <Border>
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.14" Color="Black"/>
+                            </Border.Effect>
+                            <Canvas x:Name="MainEditCanvas"
+                                    Background="White"
+                                    PreviewMouseLeftButtonDown="EditCanvas_PreviewMouseDown"
+                                    MouseMove="EditCanvas_MouseMove"
+                                    MouseLeftButtonUp="EditCanvas_MouseUp"/>
+                        </Border>
+                    </Viewbox>
+                </Grid>
 
                 <!-- Thumbnail strip: mini pages with page numbers (drag to reorder) -->
                 <Border x:Name="ThumbStrip" Grid.Column="1" Width="148"
@@ -606,6 +612,128 @@
                     </ScrollViewer>
                 </Border>
             </Grid>
+
+            <!-- ====== Editing toolbar ====== -->
+            <Border Grid.Row="1" Background="#1E293B" Padding="14,8"
+                    Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: mode + font + color + hint -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+
+                        <ToggleButton x:Name="BtnMainTextMode" Click="BtnMainTextMode_Click"
+                                      Padding="10,6" Margin="0,0,6,0" Cursor="Hand"
+                                      FontSize="12" FontWeight="SemiBold" Foreground="White">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="Bd" CornerRadius="5" Padding="{TemplateBinding Padding}"
+                                            Background="Transparent" BorderBrush="#475569" BorderThickness="1">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#2563EB"/>
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="#60A5FA"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#334155"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="✏" FontSize="13" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="เพิ่มข้อความ" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ToggleButton>
+
+                        <ToggleButton x:Name="BtnMainEraseMode" Click="BtnMainEraseMode_Click"
+                                      Padding="10,6" Margin="0,0,14,0" Cursor="Hand"
+                                      FontSize="12" FontWeight="SemiBold" Foreground="White">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="Bd" CornerRadius="5" Padding="{TemplateBinding Padding}"
+                                            Background="Transparent" BorderBrush="#475569" BorderThickness="1">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#2563EB"/>
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="#60A5FA"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#334155"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⬜" FontSize="13" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="ลบข้อความ" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ToggleButton>
+
+                        <Border Width="1" Background="#334155" VerticalAlignment="Stretch" Margin="0,0,14,0"/>
+
+                        <TextBlock Text="ขนาด:" Foreground="#94A3B8" FontSize="12"
+                                   VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <ComboBox x:Name="CbMainFontSize" Width="58" Height="28" FontSize="12"
+                                  SelectionChanged="CbMainFontSize_SelectionChanged" SelectedIndex="2">
+                            <ComboBoxItem Content="12"/>
+                            <ComboBoxItem Content="16"/>
+                            <ComboBoxItem Content="20"/>
+                            <ComboBoxItem Content="24"/>
+                            <ComboBoxItem Content="32"/>
+                            <ComboBoxItem Content="48"/>
+                        </ComboBox>
+
+                        <TextBlock Text="สี:" Foreground="#94A3B8" FontSize="12"
+                                   VerticalAlignment="Center" Margin="12,0,8,0"/>
+                        <Border x:Name="SwatchMainBlack" Width="22" Height="22" CornerRadius="4"
+                                Background="Black" BorderBrush="White" BorderThickness="2"
+                                Cursor="Hand" Margin="0,0,4,0" ToolTip="สีดำ"
+                                MouseLeftButtonDown="MainSwatch_Click" Tag="Black"/>
+                        <Border x:Name="SwatchMainBlue" Width="22" Height="22" CornerRadius="4"
+                                Background="#1E40AF" BorderBrush="Transparent" BorderThickness="2"
+                                Cursor="Hand" Margin="0,0,4,0" ToolTip="สีน้ำเงิน"
+                                MouseLeftButtonDown="MainSwatch_Click" Tag="Blue"/>
+                        <Border x:Name="SwatchMainRed" Width="22" Height="22" CornerRadius="4"
+                                Background="#EF4444" BorderBrush="Transparent" BorderThickness="2"
+                                Cursor="Hand" ToolTip="สีแดง"
+                                MouseLeftButtonDown="MainSwatch_Click" Tag="Red"/>
+
+                        <TextBlock x:Name="EditHintText" Foreground="#475569" FontSize="11" FontStyle="Italic"
+                                   VerticalAlignment="Center" Margin="14,0,0,0"
+                                   Text="เลือกโหมดแล้วคลิกบนเอกสาร"/>
+                    </StackPanel>
+
+                    <!-- Right: Save edits -->
+                    <Button Grid.Column="1" x:Name="BtnSaveEdits" Click="BtnSaveEdits_Click"
+                            Padding="14,7" Cursor="Hand" FontSize="12" FontWeight="SemiBold" Foreground="White">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Bd" CornerRadius="6" Padding="{TemplateBinding Padding}" Background="#059669">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#047857"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💾" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="บันทึกการแก้ไข" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
         </Grid>
     </Grid>
 </Window>
