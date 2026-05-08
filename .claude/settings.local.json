@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet new wpf *)",
+      "Bash(dotnet new *)",
+      "Bash(dotnet sln *)"
+    ]
+  }
+}
