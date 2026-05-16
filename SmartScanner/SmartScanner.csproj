@@ -7,12 +7,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <PlatformTarget>x86</PlatformTarget>
-    <ApplicationIcon>Icon\logo_smart_scan.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Resource Include="Icon\logo_smart_scan.png" />
-    <Resource Include="Icon\logo_smart_scan.ico" />
   </ItemGroup>
 
   <ItemGroup>

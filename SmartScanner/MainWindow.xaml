@@ -231,96 +231,103 @@
                 <!-- Header banner -->
                 <Border Background="#1D4ED8" CornerRadius="12" Padding="18,14" Margin="0,0,0,16">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Smart Scanner" FontSize="26" FontWeight="Bold" Foreground="White"/>
-                            <TextBlock Text="สแกนเอกสารและส่งทางอีเมล" FontSize="15" Foreground="#BFDBFE" Margin="0,5,0,0"/>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Row 0: Logo + Title -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,12">
+                            <Image Source="Icon/logo_smart_scan.png" Width="48" Height="48" Margin="0,0,12,0"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Smart Scanner" FontSize="26" FontWeight="Bold" Foreground="White"/>
+                                <TextBlock Text="สแกนเอกสารและส่งทางอีเมล" FontSize="15" Foreground="#BFDBFE" Margin="0,5,0,0"/>
+                            </StackPanel>
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Dark mode toggle -->
-                        <Button Command="{Binding ToggleThemeCommand}"
-                                Cursor="Hand" Margin="0,0,8,0"
-                                Background="Transparent" BorderThickness="1" BorderBrush="#60A5FA"
-                                Foreground="White" FontSize="14" FontWeight="SemiBold" Padding="10,8">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="8"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#1E40AF"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                            <TextBlock FontSize="15" VerticalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Text" Value="🌙"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsDarkMode}" Value="True">
-                                                <Setter Property="Text" Value="☀"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Button>
-                        <Button x:Name="BtnSentItems" Click="BtnSentItems_Click"
-                                Cursor="Hand" Margin="0,0,8,0"
-                                Background="Transparent" BorderThickness="1" BorderBrush="#60A5FA"
-                                Foreground="White" FontSize="14" FontWeight="SemiBold" Padding="12,8">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="8"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#1E40AF"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📬" FontSize="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="ส่งแล้ว" FontSize="14" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                        <Button Grid.Column="1" x:Name="BtnSettings" Click="BtnSettings_Click"
-                                VerticalAlignment="Center" Cursor="Hand"
-                                Background="Transparent" BorderThickness="1" BorderBrush="#60A5FA"
-                                Foreground="White" FontSize="14" FontWeight="SemiBold" Padding="12,8">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="8"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#1E40AF"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#x2699;" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="ตั้งค่าอีเมล" FontSize="14" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
+
+                        <!-- Row 1: Menu Buttons -->
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Dark mode toggle -->
+                            <Button Command="{Binding ToggleThemeCommand}"
+                                    Cursor="Hand" Margin="0,0,8,0"
+                                    Background="Transparent" BorderThickness="1" BorderBrush="#60A5FA"
+                                    Foreground="White" FontSize="14" FontWeight="SemiBold" Padding="10,8">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#1E40AF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <TextBlock FontSize="15" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="🌙"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDarkMode}" Value="True">
+                                                    <Setter Property="Text" Value="☀"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Button>
+                            <Button x:Name="BtnSentItems" Click="BtnSentItems_Click"
+                                    Cursor="Hand" Margin="0,0,8,0"
+                                    Background="Transparent" BorderThickness="1" BorderBrush="#60A5FA"
+                                    Foreground="White" FontSize="14" FontWeight="SemiBold" Padding="12,8">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#1E40AF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📬" FontSize="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="ส่งแล้ว" FontSize="14" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnSettings" Click="BtnSettings_Click"
+                                    VerticalAlignment="Center" Cursor="Hand"
+                                    Background="Transparent" BorderThickness="1" BorderBrush="#60A5FA"
+                                    Foreground="White" FontSize="14" FontWeight="SemiBold" Padding="12,8">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#1E40AF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#x2699;" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="ตั้งค่า" FontSize="14" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                     </Grid>
                 </Border>
