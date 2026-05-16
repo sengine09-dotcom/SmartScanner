@@ -17,7 +17,6 @@ DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=installer_output
 OutputBaseFilename=SmartScanner_Setup_v{#MyAppVersion}
-SetupIconFile=SmartScanner\Icon\logo_smart_scan.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
